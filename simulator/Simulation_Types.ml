@@ -3,7 +3,7 @@ open Yates_routing
 open Yates_types.Types
 
 type solver_type =
-  | Ac | Cspf | Ecmp | Edksp | Ksp | Mcf | MwMcf | Raeke | Spf | Vlb
+  | Ac | Cspf | Custom | Ecmp | Edksp | Ksp | Mcf | MwMcf | Raeke | Spf | Vlb
   | AkMcf | AkRaeke | AkEcmp | AkKsp | AkVlb
   | Ffc | Ffced
   | SemiMcfAc | SemiMcfEcmp | SemiMcfEdksp | SemiMcfKsp | SemiMcfKspFT

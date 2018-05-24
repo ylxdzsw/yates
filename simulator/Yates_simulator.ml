@@ -597,6 +597,7 @@ let command =
     +> flag "-akraeke" no_arg ~doc:" run ak+raeke"
     +> flag "-akvlb" no_arg ~doc:" run ak+vlb"
     +> flag "-cspf" no_arg ~doc:" run cspf"
+    +> flag "-custom" no_arg ~doc:" run custom"
     +> flag "-ecmp" no_arg ~doc:" run ecmp"
     +> flag "-edksp" no_arg ~doc:" run edge-disjoint ksp"
     +> flag "-ffc" no_arg ~doc:" run FFC with KSP base path set"
@@ -662,6 +663,7 @@ let command =
     (akraeke:bool)
     (akvlb:bool)
     (cspf:bool)
+    (custom:bool)
     (ecmp:bool)
     (edksp:bool)
     (ffc:bool)
@@ -724,6 +726,7 @@ let command =
          ; if akraeke           then Some AkRaeke     else None
          ; if akvlb             then Some AkVlb       else None
          ; if cspf || all       then Some Cspf        else None
+         ; if custom || all     then Some Custom      else None
          ; if ecmp || all       then Some Ecmp        else None
          ; if edksp || all      then Some Edksp       else None
          ; if ffc || all        then Some Ffc         else None

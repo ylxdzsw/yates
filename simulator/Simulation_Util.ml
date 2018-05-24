@@ -16,6 +16,7 @@ let solver_to_string (s:solver_type) : string =
   | AkRaeke -> "akraeke"
   | AkVlb -> "akvlb"
   | Cspf -> "cspf"
+  | Custom -> "custom"
   | Ecmp -> "ecmp"
   | Edksp -> "edksp"
   | Ffc -> "ffc"
@@ -47,6 +48,7 @@ let select_algorithm solver = match solver with
   | AkRaeke
   | AkVlb -> Yates_routing.Ak.solve
   | Cspf -> Yates_routing.Cspf.solve
+  | Custom -> Yates_routing.Custom.solve
   | Ecmp -> Yates_routing.Ecmp.solve
   | Edksp -> Yates_routing.Edksp.solve
   | Ffc
@@ -78,6 +80,7 @@ let select_local_recovery solver = match solver with
   | AkRaeke
   | AkVlb -> Yates_routing.Ak.local_recovery
   | Cspf -> Yates_routing.Cspf.local_recovery
+  | Custom -> Yates_routing.Custom.local_recovery
   | Ecmp -> Yates_routing.Ecmp.local_recovery
   | Edksp -> Yates_routing.Edksp.local_recovery
   | Ffc

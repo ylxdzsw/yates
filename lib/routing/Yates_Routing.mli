@@ -12,6 +12,8 @@ module Ak : Algorithm
 
 module Cspf : Algorithm
 
+module Custom : Algorithm
+
 module Ecmp : Algorithm
 
 module Edksp : Algorithm

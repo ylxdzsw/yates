@@ -3,11 +3,38 @@ open Core
 open Apsp
 open Yates_types.Types
 
+open Yojson
+open Yojson.Basic.Util
+
 (***************)
 (* local state *)
 (***************)
 let prev_scheme = ref SrcDstMap.empty
 
+module VertMap = Map.Make(String)
+
+(* call our algo *)
+let call_python topo d : Yojson.Basic.json =
+  let (cout, cin) = Unix.open_process "python2 custom/yates_adapter.py" in
+    (* print topo *)
+    let _ = Topology.fold_edges
+    (fun e _ ->
+      let src,_ = Topology.edge_src e in
+      let dst,_ = Topology.edge_dst e in
+      Printf.fprintf cin "%s %s\n" (Topology.vertex_to_string topo src) (Topology.vertex_to_string topo dst);
+      0)
+    topo 0 in
+  
+    Printf.fprintf cin "***\n";
+  
+    (* print demand *)
+    SrcDstMap.fold ~init:0 ~f:(fun ~key:(src,dst) ~data:(demand) acc ->
+      if demand > 0.0 then
+        Printf.fprintf cin "%s %s\n" (Topology.vertex_to_string topo src) (Topology.vertex_to_string topo dst);
+    0) d;
+    
+    Out_channel.close cin;
+    Yojson.Basic.from_channel cout
 
 (***********************)
 (* algorithm interface *)
@@ -19,23 +46,38 @@ let initialize _ : unit = ()
 (* Recovery: normalization recovery *)
 let local_recovery = Util.normalization_recovery
 
+let str_to_vert_pair dict pair_str =
+  let (Some a, Some b) =
+    let substrs = String.split pair_str ~on:' ' in
+      ((List.nth substrs 0), (List.nth substrs 1)) in
+  let (Some src, Some dst) =
+    ((VertMap.find dict a), (VertMap.find dict b)) in
+  (src, dst)
+
 (* Solve: Uniform distributoin over k-shortest paths *)
-let solve (topo:topology) (_:demands) : scheme =
+let solve (topo:topology) (d:demands) : scheme =
   let new_scheme =
     if not (SrcDstMap.is_empty !prev_scheme) then !prev_scheme
     else
-      let host_set = Util.get_hosts_set topo in
-      let all_ksp = all_pair_k_shortest_path topo
-          (min !Globals.budget 1000) host_set in
-      SrcDstMap.fold all_ksp ~init:SrcDstMap.empty
-        ~f:(fun ~key:(u, v) ~data:paths acc ->
-            if u = v then acc
-            else
-              let path_map =
-                List.fold_left paths ~init:PathMap.empty
-                  ~f:(fun acc path ->
-                      let prob = 1.0 /. Float.of_int (List.length paths) in
-                      PathMap.set acc ~key:path ~data:prob) in
-              SrcDstMap.set acc ~key:(u, v) ~data:path_map) in
+      let vert_dict = Topology.fold_vertexes
+        (fun v acc -> VertMap.set acc ~key:(Topology.vertex_to_string topo v) ~data:v)
+        topo VertMap.empty in
+    
+      let json = call_python topo d in
+      
+      List.fold_left (json |> to_assoc) ~init:SrcDstMap.empty
+      ~f:(fun acc (k, v) ->
+        let path_map =
+          let prob = 1.0 /. Float.of_int (List.length (v |> to_list)) in
+          List.fold_left (v |> to_list) ~init:PathMap.empty
+            ~f:(fun acc path ->
+              let p = List.map (path |> to_list) (fun x ->
+                let (src, dst) = str_to_vert_pair vert_dict (x |> to_string) in
+                  Topology.find_edge topo src dst) in
+              PathMap.set acc ~key:p ~data:prob
+            ) in
+        SrcDstMap.set acc ~key:(str_to_vert_pair vert_dict k) ~data:path_map
+      ) in
+
   prev_scheme := new_scheme;
   new_scheme
