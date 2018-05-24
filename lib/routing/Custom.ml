@@ -13,6 +13,12 @@ let prev_scheme = ref SrcDstMap.empty
 
 module VertMap = Map.Make(String)
 
+let vname topo v = let Some x =
+  let dotstr = Topology.Vertex.to_dot (Topology.vertex_to_label topo v) in
+  let substrs = String.split dotstr ~on:' ' in
+    (List.nth substrs 0) in
+  x
+
 (* call our algo *)
 let call_python topo d : Yojson.Basic.json =
   let (cout, cin) = Unix.open_process "python2 custom/yates_adapter.py" in
@@ -21,8 +27,8 @@ let call_python topo d : Yojson.Basic.json =
     (fun e _ ->
       let src,_ = Topology.edge_src e in
       let dst,_ = Topology.edge_dst e in
-      Printf.fprintf cin "%s %s\n" (Topology.vertex_to_string topo src) (Topology.vertex_to_string topo dst);
-      0)
+      Printf.fprintf cin "%s %s\n" (vname topo src) (vname topo dst);
+    0)
     topo 0 in
   
     Printf.fprintf cin "***\n";
@@ -30,7 +36,7 @@ let call_python topo d : Yojson.Basic.json =
     (* print demand *)
     SrcDstMap.fold ~init:0 ~f:(fun ~key:(src,dst) ~data:(demand) acc ->
       if demand > 0.0 then
-        Printf.fprintf cin "%s %s\n" (Topology.vertex_to_string topo src) (Topology.vertex_to_string topo dst);
+        Printf.fprintf cin "%s %s\n" (vname topo src) (vname topo dst);
     0) d;
     
     Out_channel.close cin;
@@ -60,7 +66,7 @@ let solve (topo:topology) (d:demands) : scheme =
     if not (SrcDstMap.is_empty !prev_scheme) then !prev_scheme
     else
       let vert_dict = Topology.fold_vertexes
-        (fun v acc -> VertMap.set acc ~key:(Topology.vertex_to_string topo v) ~data:v)
+        (fun v acc -> VertMap.set acc ~key:(vname topo v) ~data:v)
         topo VertMap.empty in
     
       let json = call_python topo d in
