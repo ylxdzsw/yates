@@ -14,6 +14,7 @@ demands = []
 # requires switches and hosts numbers to be a 1 to 1 map
 for line in sys.stdin:
     line = line.strip()
+    # sys.stderr.write(line)
     
     if line == "***":
         read_topo = False
@@ -33,7 +34,16 @@ for line in sys.stdin:
     else:
         demands.append((node_dict[src], node_dict[dst]))
         
-matrix = [[+((i,j) in topo) for i in range(len(node_list))] for j in range(len(node_list))]
+nnode = len(node_list)
+        
+if len(demands) == 0:
+    for i in range(nnode):
+        for j in range(nnode):
+            if i == j:
+                continue
+            demands.append((i, j))
+        
+matrix = [[+((i,j) in topo) for i in range(nnode)] for j in range(nnode)]
 
 # print matrix, demands
 

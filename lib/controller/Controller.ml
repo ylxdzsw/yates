@@ -234,6 +234,9 @@ module Make(Solver:Yates_Routing.Algorithm) = struct
     | Some "ecmp" ->
        let d = next_demand ic hm in
        Yates_Routing.Ecmp.solve topo d
+    | Some "custom" ->
+       let d = next_demand ic hm in
+       Yates_Routing.Custom.solve topo d
     | Some _ -> failwith  "Unrecognized initialization scheme"
 
   (* Print flow mods to be installed *)

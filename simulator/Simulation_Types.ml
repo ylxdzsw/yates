@@ -6,7 +6,7 @@ type solver_type =
   | Ac | Cspf | Custom | Ecmp | Edksp | Ksp | Mcf | MwMcf | Raeke | Spf | Vlb
   | AkMcf | AkRaeke | AkEcmp | AkKsp | AkVlb
   | Ffc | Ffced
-  | SemiMcfAc | SemiMcfEcmp | SemiMcfEdksp | SemiMcfKsp | SemiMcfKspFT
+  | SemiMcfCustom | SemiMcfAc | SemiMcfEcmp | SemiMcfEdksp | SemiMcfKsp | SemiMcfKspFT
   | SemiMcfMcf | SemiMcfMcfEnv | SemiMcfMcfFTEnv | SemiMcfRaeke
   | SemiMcfRaekeFT | SemiMcfVlb
   | OptimalMcf

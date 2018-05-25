@@ -109,6 +109,9 @@ let initial_scheme algorithm topo predict : scheme =
   | SemiMcfRaeke ->
     let _ = Yates_routing.Raeke.initialize SrcDstMap.empty in
     Yates_routing.Raeke.solve topo SrcDstMap.empty
+  | SemiMcfCustom ->
+    let _ = Yates_routing.Custom.initialize SrcDstMap.empty in
+    Yates_routing.Custom.solve topo SrcDstMap.empty
   | SemiMcfRaekeFT ->
     let _ = Yates_routing.Raeke.initialize SrcDstMap.empty in
     all_failures_envelope Yates_routing.Raeke.solve topo SrcDstMap.empty
@@ -138,6 +141,7 @@ let initialize_scheme algorithm topo predict : unit =
   | Ffced -> Yates_routing.Ffc.initialize pruned_scheme
   | Ksp -> Yates_routing.Ksp.initialize SrcDstMap.empty
   | Raeke -> Yates_routing.Raeke.initialize SrcDstMap.empty
+  | SemiMcfCustom
   | SemiMcfAc
   | SemiMcfEcmp
   | SemiMcfEdksp

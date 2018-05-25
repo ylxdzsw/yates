@@ -25,6 +25,7 @@ let solver_to_string (s:solver_type) : string =
   | Mcf -> "mcf"
   | MwMcf -> "mwmcf"
   | Raeke -> "raeke"
+  | SemiMcfCustom -> "semimcfcustom"
   | SemiMcfAc -> "semimcfac"
   | SemiMcfEcmp -> "semimcfecmp"
   | SemiMcfEdksp -> "semimcfedksp"
@@ -67,6 +68,7 @@ let select_algorithm solver = match solver with
   | SemiMcfMcfEnv
   | SemiMcfMcfFTEnv
   | SemiMcfRaeke
+  | SemiMcfCustom
   | SemiMcfRaekeFT
   | SemiMcfVlb -> Yates_routing.SemiMcf.solve
   | Spf -> Yates_routing.Spf.solve

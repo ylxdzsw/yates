@@ -584,7 +584,7 @@ let find_ksp_budget_test (topo_file:string) (subgraph_file_opt:string option)
   Printf.printf "Result: %d\n%!" final_budget;
   close_demands actual_ic
 
-
+(* TODO add flag for -semimcfcustom*)
 let command =
   Command.basic_spec
     ~summary:"Simulate run of routing strategies"
@@ -607,6 +607,7 @@ let command =
     +> flag "-mwmcf" no_arg ~doc:" run mwmcf"
     +> flag "-optimalmcf" no_arg ~doc:" run optimal mcf"
     +> flag "-raeke" no_arg ~doc:" run raeke"
+    +> flag "-semimcfcustom" no_arg ~doc:" run semi mcf+custom"
     +> flag "-semimcfac" no_arg ~doc:" run semi mcf+ac"
     +> flag "-semimcfecmp" no_arg ~doc:" run semi mcf+ecmp"
     +> flag "-semimcfedksp" no_arg ~doc:" run semi mcf+edksp"
@@ -673,6 +674,7 @@ let command =
     (mwmcf:bool)
     (optimalmcf:bool)
     (raeke:bool)
+    (semimcfcustom:bool)
     (semimcfac:bool)
     (semimcfecmp:bool)
     (semimcfedksp:bool)
@@ -736,6 +738,7 @@ let command =
          ; if mwmcf             then Some MwMcf       else None
          ; if optimalmcf || all then Some OptimalMcf  else None
          ; if raeke || all      then Some Raeke       else None
+         ; if semimcfcustom || all then Some SemiMcfCustom else None
          ; if semimcfac || all        then Some SemiMcfAc     else None
          ; if semimcfecmp || all      then Some SemiMcfEcmp     else None
          ; if semimcfedksp || all     then Some SemiMcfEdksp      else None
