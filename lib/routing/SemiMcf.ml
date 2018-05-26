@@ -54,8 +54,7 @@ let build_objective emap topo =
            let name = Var (var_name_uid x) in
            Times ((1. /. capacity), name)
          ) uid_list in
-         let total_flow = Sum (all_flows) in
-         let penalty = total_flow in
+         let penalty = square (Sum all_flows) in
          penalty::acc) topo [] in
   Sum caps
 

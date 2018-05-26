@@ -10,6 +10,9 @@ type arith_exp =
   | Num of float
   | Times of float * arith_exp
   | Sum of arith_exp list
+  | QuadGroup of arith_exp list
+  | QuadInter of arith_exp * arith_exp
+  | QuadSingle of arith_exp
 
 type constrain =
   | Eq of string * arith_exp * float
@@ -30,6 +33,18 @@ let minus ex1 ex2 =
   let all_terms = list1 @ (negate ex2) in
   Sum all_terms
 
+let square ex =
+  let (Sum aexs) = ex in
+  let terms = List.fold_left aexs ~init:[] ~f:(fun acco a ->
+    List.fold_left aexs ~init:acco ~f:(fun acci b -> 
+      (* TODO: deal with other combinations *)
+      let Times (ac, av) = a in
+      let Times (bc, bv) = b in
+      let v = if av = bv then QuadSingle av else QuadInter (av, bv) in
+      Times (ac *. bc, v) :: acci
+    )) in
+  QuadGroup terms
+
 let rec string_of_aexp ae =
   match ae with
   | Var v -> v
@@ -41,10 +56,15 @@ let rec string_of_aexp ae =
         if acc = "" then string_of_aexp ae else match ae with
           | Times (coeff, a2) ->
             if coeff = -1. then acc ^ " - " ^ (string_of_aexp a2)
-            else if coeff < 0. then acc ^ " - " ^
-                                   (string_of_aexp (Times (-.coeff, a2)))
+            else if coeff < 0. then acc ^ " - " ^ (string_of_aexp (Times (-.coeff, a2)))
             else acc ^ " + " ^ (string_of_aexp ae)
           | _ -> acc ^ " + " ^ (string_of_aexp ae))
+  | QuadGroup (aexs) ->
+    "[" ^ (string_of_aexp (Sum aexs)) ^ "]"
+  | QuadInter (a, b) ->
+    (string_of_aexp a) ^ " * " ^ (string_of_aexp b)
+  | QuadSingle (x) ->
+    (string_of_aexp x) ^ " ^ 2 "
 
 let string_of_constraint c =
   match c with
