@@ -35,7 +35,7 @@ let rec string_of_aexp ae =
   | Var v -> v
   | Num f -> Float.to_string f
   | Times (coeff, a2) ->
-    Printf.sprintf "%f %s" (coeff) (string_of_aexp a2)
+    Printf.sprintf "%s %s" (Float.to_string coeff) (string_of_aexp a2)
   | Sum (aexs) ->
     List.fold_left aexs ~init:"" ~f:(fun acc ae ->
         if acc = "" then string_of_aexp ae else match ae with

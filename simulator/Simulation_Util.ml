@@ -101,6 +101,7 @@ let select_local_recovery solver = match solver with
   | SemiMcfMcfEnv
   | SemiMcfMcfFTEnv
   | SemiMcfRaeke
+  | SemiMcfCustom
   | SemiMcfRaekeFT
   | SemiMcfVlb -> Yates_routing.SemiMcf.local_recovery
   | Spf -> Yates_routing.Spf.local_recovery

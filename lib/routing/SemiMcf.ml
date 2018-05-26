@@ -19,67 +19,51 @@ let var_name_rev topo edge d_pair =
     (name_of_vertex topo dst)
     (name_of_vertex topo src)
 
-let objective = Var "Z"
+let non_negative_constraints (pmap : path_uid_map) : constrain list =
+  PathMap.fold ~init:[] ~f:(fun ~key:_ ~data:id acc ->
+    let name = Printf.sprintf "non_negative_%d" id in
+    let exp = Var (var_name_uid id) in
+    (Geq (name, exp, 0.))::acc
+  ) pmap
+  
+let demand_constraints pmap topo d base_path_set: constrain list =
+  SrcDstMap.fold ~init:[] ~f:(fun ~key:(src,dst) ~data:(demand) acc ->
+    if (src = dst) then acc
+    else
+      match SrcDstMap.find base_path_set (src,dst) with
+      | None -> if (demand <= 0.) then acc else (assert false)
+      | Some path_list ->
+        let all_flows =
+          List.fold_left ~init:[] ~f:(fun acc p ->
+            let pvar = match PathMap.find pmap p with
+              | None -> assert false
+              | Some id -> Var (var_name_uid id) in
+            pvar::acc ) path_list in
+        let total_flow = Sum(all_flows) in
+        let name = Printf.sprintf "dem-%s-%s" (name_of_vertex topo src) (name_of_vertex topo dst) in
+        (Geq (name, total_flow, demand /. demand_divisor))::acc) d
 
-let capacity_constraints (pmap : path_uid_map) (emap : edge_uidlist_map)
-      (topo : topology) (d : demands)
-      (init_acc : constrain list) : constrain list =
-  (* For every edge, there is a capacity constraint *)
-  Topology.fold_edges
+let build_objective emap topo =
+  let caps = Topology.fold_edges
     (fun edge acc ->
-       (* The sum of all commodity flows in both direction must exceed
-          the capacity by less than Z * capacity. *)
-
        match (EdgeMap.find emap edge) with
        | None -> acc
        | Some uid_list ->
-         let all_flows = List.map ~f:(fun x -> Var(var_name_uid x)) uid_list in
-         (* Add them all up *)
+         let capacity = (capacity_of_edge topo edge) /. cap_divisor in
+         let all_flows = List.map ~f:(fun x ->
+           let name = Var (var_name_uid x) in
+           Times ((1. /. capacity), name)
+         ) uid_list in
          let total_flow = Sum (all_flows) in
-         let scaled_cap = Times ((capacity_of_edge topo edge) /. cap_divisor, objective) in
-         (* Total flow is at most the scaled capacity *)
-         let constr = minus total_flow scaled_cap in
-         let name = Printf.sprintf "cap_%s"
-                      (string_of_edge topo edge) in
-         (Leq (name, constr, 0.))::acc) topo init_acc
-
-let demand_constraints (pmap : path_uid_map) (emap : edge_uidlist_map)
-      (topo : topology) (d : demands) (base_path_set : (path List.t) SrcDstMap.t)
-      (init_acc : constrain list) : constrain list =
-  (* Every source-sink pair has a demand constraint *)
-  SrcDstMap.fold
-    ~init:init_acc
-    ~f:(fun ~key:(src,dst) ~data:(demand) acc ->
-      if (src = dst) then acc
-      else
-        (* We need to add up the rates for all paths in pmap(src,dst) *)
-        match SrcDstMap.find base_path_set (src,dst) with
-        | None -> if (demand <= 0.) then acc else (assert false)
-        | Some path_list ->
-          let all_flows =
-            List.fold_left
-              ~init:[]
-              ~f:(fun acc p ->
-                let pvar = match PathMap.find pmap p with
-                  | None -> assert false
-                  | Some id -> Var(var_name_uid id) in
-                pvar::acc ) path_list in
-          (* some code to generate a constraint *)
-          let total_flow = Sum(all_flows) in
-          let name = Printf.sprintf "dem-%s-%s" (name_of_vertex topo src)
-                       (name_of_vertex topo dst) in
-          (Geq (name, total_flow, demand /. demand_divisor))::acc) d
-
+         let penalty = total_flow in
+         penalty::acc) topo [] in
+  Sum caps
 
 let lp_of_maps (pmap:path_uid_map) (emap:edge_uidlist_map) (topo:topology)
       (d:demands) (base_path_set : (path List.t) SrcDstMap.t) : (arith_exp * constrain list) =
-  let cap_constrs =
-    capacity_constraints pmap emap topo d [] in
-  let cap_and_demand =
-    demand_constraints pmap emap topo d base_path_set cap_constrs in
-  assert (List.length cap_constrs > 0);
-  assert (List.length cap_and_demand > 0);
-  (objective, cap_and_demand)
+  let constr1 = non_negative_constraints pmap in
+  let constr2 = demand_constraints pmap topo d base_path_set in
+  ((build_objective emap topo), constr1 @ constr2)
 
 let rec new_rand () : float =
   let rand = (Random.float 1.0) in
@@ -151,8 +135,10 @@ let solve_lp (pmap:int PathMap.t) (emap:int list EdgeMap.t) (topo:topology)
                 (opt_z, tup::flows)
               else
                 (opt_z, flows))) in
+                (*
   ignore (Sys.remove lp_filename);
   ignore (Sys.remove lp_solname);
+  *)
   (ratio,flows)
 
 
@@ -299,78 +285,3 @@ let local_recovery (_:scheme) (topo:topology) (failed_links:failure)
         SrcDstMap.set ~key:(u,v) ~data:uv_dem acc) in
   let new_scheme = restricted_mcf topo new_demands new_base_path_set in
   new_scheme
-
-
-
-  (*
-  (* Begin debug code *)
-  (* Store which paths does a path intersect with *)
-  let (pxmap) =
-    SrcDstMap.fold
-      s (* fold over the scheme *)
-      ~init:(UidMap.empty)
-      (* for every pair of hosts u,v *)
-      ~f:(fun ~key:(u,v) ~data:paths acc ->
-	  if (u = v) then acc
-	  else begin
-	  assert (not (PathMap.is_empty paths));
-	  PathMap.fold
-	    paths
-	    ~init:acc
-	    (* get the possible paths, and for every path *)
-	    ~f:(fun ~key:path ~data:_ (pxmap) ->
-		let id = match (PathMap.find pmap path) with
-                  | None -> failwith "invalid path id"
-                  | Some x -> x in
-		assert (not (List.is_empty path));
-		let pxmap' =
-		  List.fold_left
-		    path
-		    ~init:pxmap
-		    ~f:(fun pxmap e ->
-                        let ids = match (UidMap.find pxmap id) with
-                          | None -> []
-                          | Some x -> x in
-			let xids = match (EdgeMap.find emap e ) with
-			  | None -> ids
-			  | Some newids -> List.sort Pervasives.compare (newids @ ids) in
-			UidMap.set ~key:id ~data:xids pxmap) in
-		(pxmap')) end) in
-
-  let rec remove_dups lst = match lst with
-    | [] -> []
-    | h::t -> let tail = remove_dups (List.filter t (fun x -> x<>h))
-              in h::tail
-    in
-
-  (* Print path intersection *)
-  let _ =
-    UidMap.fold
-      pxmap
-      ~init:0
-      ~f:(fun ~key:id ~data:xids acc ->
-        let xids = remove_dups xids in
-        Printf.printf "\n %d : [%d] : " id (List.length xids);
-        let _ = List.fold_left
-          xids
-          ~init:0
-          ~f:(fun acc xid ->
-            Printf.printf "%d " xid;
-            0
-          ) in
-        0
-      ) in
-   (* End debug code *)
-   *)
-  (* TODO:
-     - LP: variable for every path
-     - minimize: Z (congestion)
-     - constraings: capacity constraints, demand constraints,
-       and variables are non-negative
-     - capacity constraints:
-         Sum_(all paths that contain that edge) flow_var < capacity * Z
-         Sum_(all path for src,dst) flow_var >= demand
-         flow_var >= 0
-     - Re-normalize for the probabilities
-   *)
-
