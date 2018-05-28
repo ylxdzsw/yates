@@ -102,6 +102,7 @@ let solve_lp (pmap:int PathMap.t) (emap:int list EdgeMap.t) (topo:topology)
   let lp_solname = (Printf.sprintf "/tmp/semimcf_%f.sol" rand) in
   serialize_lp lp lp_filename;
 
+  let t = Unix.gettimeofday () in
   let gurobi_in = Unix.open_process_in
                     ("gurobi_cl OptimalityTol=1e-9 ResultFile=" ^ lp_solname ^ " " ^ lp_filename) in
   let time_str = "Solved in [0-9]+ iterations and \\([0-9.e+-]+\\) seconds" in
@@ -118,6 +119,7 @@ let solve_lp (pmap:int PathMap.t) (emap:int list EdgeMap.t) (topo:topology)
       End_of_file -> solve_time in
   let _ = read_output gurobi_in 0. in
   ignore (Unix.close_process_in gurobi_in);
+  Printf.printf "\noptimizing time: %fs\n" ((Unix.gettimeofday ()) -. t);
 
   (* read back all the edge flows from the .sol file *)
 

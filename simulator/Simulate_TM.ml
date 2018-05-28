@@ -6,6 +6,7 @@ open Simulation_Util
 open Yates_routing.Util
 open Yates_types.Types
 open Yates_utils
+
 (***********************************************************)
 (* Simulate one traffic matrix and generate statistics *)
 (***********************************************************)
@@ -78,7 +79,8 @@ let all_failures_envelope solver (topo:topology) (envelope:demands) : scheme =
 
 (* Compute the initial scheme for a TE algorithm *)
 let initial_scheme algorithm topo predict : scheme =
-  match algorithm with
+  let t = Unix.gettimeofday () in
+  let res = match algorithm with
   | SemiMcfAc ->
     let _ = Yates_routing.AC.initialize SrcDstMap.empty in
     Yates_routing.AC.solve topo SrcDstMap.empty
@@ -119,7 +121,9 @@ let initial_scheme algorithm topo predict : scheme =
   | SemiMcfVlb ->
     let _ = Yates_routing.Vlb.initialize SrcDstMap.empty in
     Yates_routing.Vlb.solve topo SrcDstMap.empty
-  | _ -> SrcDstMap.empty
+  | _ -> SrcDstMap.empty in
+  Printf.printf "path-finding time: %fs\n" ((Unix.gettimeofday ()) -. t);
+  res
 
 (* Initialize a TE algorithm *)
 let initialize_scheme algorithm topo predict : unit =

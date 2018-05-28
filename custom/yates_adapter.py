@@ -4,6 +4,7 @@ from dinic import get_edge_disjoint_paths
 from path_numbug import calc_path_num
 
 import sys
+import time
 
 read_topo = True
 node_list = []
@@ -49,12 +50,17 @@ matrix = [[+((i,j) in topo) for i in range(nnode)] for j in range(nnode)]
 
 all_paths = []
 max_num=0
+
+starttime = time.time()
+
 for (s, t) in demands:
     disjoint_paths = get_edge_disjoint_paths(matrix, s, t)
     all_paths.append(disjoint_paths)
     max_num+=len(disjoint_paths)
 
 optinum, optipaths=calc_path_num(matrix, max_num, 3, all_paths)
+
+sys.stderr.write("time: {}\n".format(time.time() - starttime))
 
 # print optipaths
 
