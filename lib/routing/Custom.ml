@@ -21,7 +21,7 @@ let vname topo v = let Some x =
 
 (* call our algo *)
 let call_python topo d : Yojson.Basic.json =
-  let (cout, cin) = Unix.open_process "python2 custom/yates_adapter.py" in
+  let (cout, cin) = Unix.open_process "julia custom/yates_adapter.jl" in
     (* print topo *)
     let _ = Topology.fold_edges
     (fun e _ ->
