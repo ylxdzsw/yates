@@ -4,7 +4,7 @@ using OhMyJulia
 using JSON
 
 read_topo = true
-node_list = ["0" for i in 1:100] #String[]
+node_list = String[]
 node_dict = Dict{String, Int}()
 topo = Set{Tuple{Int, Int}}()
 demands = Tuple{Int, Int}[]
@@ -23,11 +23,8 @@ for line in readlines()
     if read_topo
         for n in (src, dst)
             if n ∉ keys(node_dict)
-                id = parse(Int, n)
-                node_list[id] = n
-                node_dict[n] = id
-                # push!(node_list, n)
-                # node_dict[n] = length(node_list)
+                push!(node_list, n)
+                node_dict[n] = length(node_list)
             end
         end
         push!(topo, (node_dict[src], node_dict[dst]))
@@ -39,7 +36,7 @@ end
 nnode = length(node_list)
         
 if length(demands) == 0
-    for i in range(nnode), j in range(nnode) @when i != j
+    for i in 1:nnode, j in 1:nnode @when i != j
         push!(demands, (i, j))
     end
 end
@@ -47,6 +44,8 @@ end
 const lib = rel"a.out"
 
 groups = []
+
+tic()
 
 for (src, dst) in demands
     mf = ccall((:init, lib), *(Void), (Cint,), nnode)
@@ -69,6 +68,10 @@ for (src, dst) in demands
     
     push!(groups, group)
 end
+
+println(STDERR, "TIME: ", toq())
+
+# println(STDERR, groups)
 
 to_pair(x) = "h$(node_list[x[][]]) h$(node_list[x[][end]])"
 

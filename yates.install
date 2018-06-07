@@ -114,6 +114,10 @@ lib: [
   "_build/install/default/lib/yates/routing/yates_routing__MwMcf.cmti" {"routing/yates_routing__MwMcf.cmti"}
   "_build/install/default/lib/yates/routing/MwMcf.mli" {"routing/MwMcf.mli"}
   "_build/install/default/lib/yates/routing/MwMcf.ml" {"routing/MwMcf.ml"}
+  "_build/install/default/lib/yates/routing/yates_routing__Path_Selection.cmi" {"routing/yates_routing__Path_Selection.cmi"}
+  "_build/install/default/lib/yates/routing/yates_routing__Path_Selection.cmx" {"routing/yates_routing__Path_Selection.cmx"}
+  "_build/install/default/lib/yates/routing/yates_routing__Path_Selection.cmt" {"routing/yates_routing__Path_Selection.cmt"}
+  "_build/install/default/lib/yates/routing/Path_Selection.ml" {"routing/Path_Selection.ml"}
   "_build/install/default/lib/yates/routing/yates_routing__Raeke.cmi" {"routing/yates_routing__Raeke.cmi"}
   "_build/install/default/lib/yates/routing/yates_routing__Raeke.cmx" {"routing/yates_routing__Raeke.cmx"}
   "_build/install/default/lib/yates/routing/yates_routing__Raeke.cmt" {"routing/yates_routing__Raeke.cmt"}

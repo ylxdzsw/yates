@@ -6,6 +6,8 @@ open Yates_Mw
 open Yates_Rrt
 open Yates_types.Types
 
+open Path_Selection
+
 (* multiplicative weights input *)
 module MWInput : MW_INPUT with type structure = FRT.routing_tree = struct
 
@@ -54,7 +56,9 @@ let solve (topo:topology) (d:demands) : scheme =
         else hosts in
 
       let epsilon = 0.1 in
+      let ttttt = Unix.gettimeofday () in
       let _,mw_solution,_ = RRTs.hedge_iterations epsilon t d end_points in
+      Printf.printf "tree construction time: %fs\n" ((Unix.gettimeofday ()) -. ttttt);
       let paths src dst : probability PathMap.t =
         List.fold_left mw_solution
           ~init:PathMap.empty
@@ -114,7 +118,7 @@ let solve (topo:topology) (d:demands) : scheme =
                         acc))
         else
           endpt_scheme in
-      normalize_scheme sch
+      select_path topo (normalize_scheme sch)
     else !prev_scheme in
   prev_scheme := new_scheme;
   new_scheme

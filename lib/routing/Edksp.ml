@@ -147,8 +147,8 @@ let min_st_cut (topo : Topology.t) (src : Topology.vertex)
   let _ = Sys.remove lp_filename in
   let _ = Sys.remove lp_solname in
   let min_cut = int_of_float opt_z in
-  Printf.printf "Min cut: %s - %s : %d\n"
-    (name_of_vertex topo src) (name_of_vertex topo dst) min_cut;
+  (*Printf.printf "Min cut: %s - %s : %d\n"
+    (name_of_vertex topo src) (name_of_vertex topo dst) min_cut;*)
   min_cut
 
 (****************************************************)
